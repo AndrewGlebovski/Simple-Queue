@@ -15,12 +15,17 @@ all: $(BIN_DIR) run.exe
 
 
 # Завершает сборку
-run.exe: $(addprefix $(BIN_DIR)/, main.o)
+run.exe: $(addprefix $(BIN_DIR)/, main.o queue.o)
 	$(COMPILER) $^ -o run.exe
 
 
 # Предварительная сборка main
-$(BIN_DIR)/main.o: $(addprefix $(SRC_DIR)/, main.cpp)
+$(BIN_DIR)/main.o: $(addprefix $(SRC_DIR)/, main.cpp queue.hpp)
+	$(COMPILER) $(FLAGS) -c $< -o $@
+
+
+# Предварительная сборка queue
+$(BIN_DIR)/queue.o: $(addprefix $(SRC_DIR)/, queue.cpp queue.hpp)
 	$(COMPILER) $(FLAGS) -c $< -o $@
 
 
