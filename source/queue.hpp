@@ -20,12 +20,13 @@ typedef struct {
 enum EXIT_CODES {
     INVALID_DATA     =  1,        ///< Invalid queue data points
     INVALID_SIZE     =  2,        ///< Size is larger than capacity or negative
-    INVALID_CAPACITY =  3,        ///< Capacity is larger than type's maximum or negative
-    UNEXP_POISON_VAL =  4,        ///< Unexpected poison value before size
-    UNEXP_NORMAL_VAL =  5,        ///< Unexpected normal value after size
-    INVALID_ARGUMENT =  6,        ///< Invalid argument given to the function
-    EMPTY_QUEUE      =  7,        ///< No elements to pop
-    ALLOCATE_FAIL    =  8,        ///< Memory allocate return NULL
+    INVALID_HEAD     =  3,        ///< Head is larger than capacity or negative
+    INVALID_CAPACITY =  4,        ///< Capacity is larger than type's maximum or negative
+    UNEXP_POISON_VAL =  5,        ///< Unexpected poison value before size
+    UNEXP_NORMAL_VAL =  6,        ///< Unexpected normal value after size
+    INVALID_ARGUMENT =  7,        ///< Invalid argument given to the function
+    EMPTY_QUEUE      =  8,        ///< No elements to pop
+    ALLOCATE_FAIL    =  9,        ///< Memory allocate return NULL
 };
 
 

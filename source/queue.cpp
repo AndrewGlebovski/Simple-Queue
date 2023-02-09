@@ -49,6 +49,7 @@ int queue_constructor(Queue *queue, int capacity) {
     
     queue -> capacity = capacity;
     queue -> size = 0;
+    queue -> head = 0;
 
     RETURN_ON_ERROR(queue);
 
@@ -59,7 +60,9 @@ int queue_constructor(Queue *queue, int capacity) {
 static int queue_resize(Queue *queue) {
     RETURN_ON_ERROR(queue);
 
-    if (4 * queue -> size < queue -> capacity)
+    int prev_capacity = queue -> capacity;
+
+    if (4 * queue -> size <= queue -> capacity)
         queue -> capacity /= 2;
     
     else if (queue -> size == queue -> capacity)
@@ -68,11 +71,20 @@ static int queue_resize(Queue *queue) {
     else 
         return 0;
 
-    queue -> data = (queue_data_t *) realloc(queue -> data, queue -> capacity * sizeof(queue_data_t));
+    queue_data_t *prev_data = queue -> data;
+
+    queue -> data = (queue_data_t *) calloc(queue -> capacity, sizeof(queue_data_t));
     CHECK(queue -> data, return EXIT_CODES::ALLOCATE_FAIL);
 
     for(int i = queue -> size; i < queue -> capacity ; i++)
         (queue -> data)[i] = POISON_VALUE;
+
+    for(int i = 0; i < queue -> size; i++)
+        (queue -> data)[i] = (prev_data)[(queue -> head + i) % prev_capacity];
+    
+    free(prev_data);
+
+    queue -> head = 0;
 
     RETURN_ON_ERROR(queue);
 
@@ -83,7 +95,8 @@ static int queue_resize(Queue *queue) {
 int queue_push(Queue *queue, queue_data_t new_data) {
     RETURN_ON_ERROR(queue);
 
-    (queue -> data)[(queue -> size)++] = new_data;
+    (queue -> data)[(queue -> head + queue -> size) % queue -> capacity] = new_data;
+    queue -> size++;
 
     RETURN_ON_ERROR(queue);
 
@@ -98,8 +111,10 @@ int queue_pop(Queue *queue, queue_data_t *data) {
 
     CHECK(queue -> size, return EXIT_CODES::EMPTY_QUEUE);
 
-    *data = (queue -> data)[--(queue -> size)];
-    (queue -> data)[(queue -> size)] = POISON_VALUE;
+    *data = (queue -> data)[queue -> head];
+    (queue -> data)[queue -> head] = POISON_VALUE;
+    queue -> head = (queue -> head + 1) % queue -> capacity;
+    queue -> size--;
 
     RETURN_ON_ERROR(queue);
 
@@ -130,9 +145,17 @@ int queue_verificator(Queue *queue) {
 
     CHECK(queue -> size >= 0 && queue -> size <= queue -> capacity, return EXIT_CODES::INVALID_SIZE);
 
+    CHECK(queue -> head >= 0 && queue -> head < queue -> capacity, return EXIT_CODES::INVALID_HEAD);
+    
+    int count = 0;
+
     for(int i = 0; i < queue -> capacity; i++) {
-        if (i < queue -> size)
+        if (i == queue -> head) count = queue -> size;
+
+        if (count) {
             CHECK((queue -> data)[i] != POISON_VALUE, return EXIT_CODES::UNEXP_POISON_VAL);
+            count--;
+        }
         else
             CHECK((queue -> data)[i] == POISON_VALUE, return EXIT_CODES::UNEXP_NORMAL_VAL);
     }
@@ -148,6 +171,7 @@ void queue_dump(Queue *queue, int error, FILE *stream) {
 
     fprintf(stream, "\%2s%-8s: %i\n", "", "Capacity", queue -> capacity);
     fprintf(stream, "\%2s%-8s: %i\n", "", "Size", queue -> size);
+    fprintf(stream, "\%2s%-8s: %i\n", "", "Head", queue -> head);
 
     fprintf(stream, "\%2sData[%p]", "", queue -> data);
     
